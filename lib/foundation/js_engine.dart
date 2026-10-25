@@ -24,9 +24,11 @@ import 'package:pointycastle/block/modes/ofb.dart';
 import 'package:uuid/uuid.dart';
 import 'package:venera/components/js_ui.dart';
 import 'package:venera/foundation/app.dart';
+import 'package:venera/foundation/appdata.dart';
 import 'package:venera/foundation/js_pool.dart';
 import 'package:venera/network/app_dio.dart';
 import 'package:venera/network/cookie_jar.dart';
+import 'package:venera/network/eh_direct_connection.dart';
 import 'package:venera/network/proxy.dart';
 import 'package:venera/utils/init.dart';
 
@@ -222,7 +224,9 @@ class JsEngine with _JSEngineApi, JsUiApi, Init {
         headers["User-Agent"] = webUA;
       }
       var dio = _dio;
-      if (headers['http_client'] == "dart:io") {
+      if (headers['http_client'] == "dart:io" &&
+          !(appdata.settings['ehDirectConnection'] == true &&
+              EhDirectConnection.appliesTo(Uri.parse(req['url'])))) {
         dio = Dio(BaseOptions(
           responseType: ResponseType.plain,
           validateStatus: (status) => true,

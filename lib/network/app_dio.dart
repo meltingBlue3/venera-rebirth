@@ -2,16 +2,15 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
-import 'package:flutter/services.dart';
-import 'package:rhttp/rhttp.dart' as rhttp;
-import 'package:venera/foundation/appdata.dart';
 import 'package:venera/foundation/log.dart';
 import 'package:venera/network/cache.dart';
-import 'package:venera/network/proxy.dart';
 
 import '../foundation/app.dart';
 import 'cloudflare.dart';
 import 'cookie_jar.dart';
+import 'rhttp_adapter.dart';
+
+export 'rhttp_adapter.dart';
 
 export 'package:dio/dio.dart';
 
@@ -171,111 +170,5 @@ class AppDio with DioMixin {
         _requests.remove(path);
       }
     }
-  }
-}
-
-class RHttpAdapter implements HttpClientAdapter {
-  Future<rhttp.ClientSettings> get settings async {
-    var proxy = await getProxy();
-
-    return rhttp.ClientSettings(
-      proxySettings: proxy == null
-          ? const rhttp.ProxySettings.noProxy()
-          : rhttp.ProxySettings.proxy(proxy),
-      redirectSettings: const rhttp.RedirectSettings.limited(5),
-      timeoutSettings: const rhttp.TimeoutSettings(
-        connectTimeout: Duration(seconds: 15),
-        keepAliveTimeout: Duration(seconds: 60),
-        keepAlivePing: Duration(seconds: 30),
-      ),
-      throwOnStatusCode: false,
-      dnsSettings: rhttp.DnsSettings.static(overrides: _getOverrides()),
-      tlsSettings: rhttp.TlsSettings(
-        sni: appdata.settings['sni'] != false,
-        verifyCertificates: appdata.settings['ignoreBadCertificate'] != true,
-      ),
-    );
-  }
-
-  static Map<String, List<String>> _getOverrides() {
-    if (!appdata.settings['enableDnsOverrides'] == true) {
-      return {};
-    }
-    var config = appdata.settings["dnsOverrides"];
-    var result = <String, List<String>>{};
-    if (config is Map) {
-      for (var entry in config.entries) {
-        if (entry.key is String && entry.value is String) {
-          result[entry.key] = [entry.value];
-        }
-      }
-    }
-    return result;
-  }
-
-  @override
-  void close({bool force = false}) {}
-
-  @override
-  Future<ResponseBody> fetch(
-    RequestOptions options,
-    Stream<Uint8List>? requestStream,
-    Future<void>? cancelFuture,
-  ) async {
-    if (options.headers['User-Agent'] == null &&
-        options.headers['user-agent'] == null) {
-      options.headers['User-Agent'] = "venera/v${App.version}";
-    }
-
-    var res = await rhttp.Rhttp.request(
-      method: rhttp.HttpMethod(options.method),
-      url: options.uri.toString(),
-      settings: await settings,
-      expectBody: rhttp.HttpExpectBody.stream,
-      body: requestStream == null ? null : rhttp.HttpBody.stream(requestStream),
-      headers: rhttp.HttpHeaders.rawMap(
-        Map.fromEntries(
-          options.headers.entries.map(
-            (e) => MapEntry(e.key, e.value.toString().trim()),
-          ),
-        ),
-      ),
-    );
-    if (res is! rhttp.HttpStreamResponse) {
-      throw Exception("Invalid response type: ${res.runtimeType}");
-    }
-    var headers = <String, List<String>>{};
-    for (var entry in res.headers) {
-      var key = entry.$1.toLowerCase();
-      headers[key] ??= [];
-      headers[key]!.add(entry.$2);
-    }
-    return ResponseBody(
-      res.body,
-      res.statusCode,
-      statusMessage: _getStatusMessage(res.statusCode),
-      isRedirect: false,
-      headers: headers,
-    );
-  }
-
-  static String _getStatusMessage(int statusCode) {
-    return switch (statusCode) {
-      200 => "OK",
-      201 => "Created",
-      202 => "Accepted",
-      204 => "No Content",
-      206 => "Partial Content",
-      301 => "Moved Permanently",
-      302 => "Found",
-      400 => "Invalid Status Code 400: The Request is invalid.",
-      401 => "Invalid Status Code 401: The Request is unauthorized.",
-      403 =>
-        "Invalid Status Code 403: No permission to access the resource. Check your account or network.",
-      404 => "Invalid Status Code 404: Not found.",
-      429 =>
-        "Invalid Status Code 429: Too many requests. Please try again later.",
-      _ => "Invalid Status Code $statusCode",
-    };
   }
 }

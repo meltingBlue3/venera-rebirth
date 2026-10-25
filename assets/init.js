@@ -456,6 +456,8 @@ function Cookie({name, value, domain}) {
 
 /**
  * Network object for sending HTTP requests and managing cookies.
+ * EH requests follow the user's optional direct connection setting, including
+ * requests with the internal http_client: dart:io header. See doc/js_api.md.
  * @namespace Network
  */
 let Network = {

@@ -212,6 +212,7 @@ class Settings with ChangeNotifier {
     'authorizationRequired': false,
     'onClickFavorite': 'viewDetail', // viewDetail, read
     'enableDnsOverrides': false,
+    'ehDirectConnection': false,
     'dnsOverrides': {},
     'enableCustomImageProcessing': false,
     'customImageProcessing': defaultCustomImageProcessing,

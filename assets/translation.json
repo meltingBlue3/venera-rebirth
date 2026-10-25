@@ -1,5 +1,8 @@
 {
   "zh_CN": {
+    "No images available to use as cover.": "没有可用作封面的图片。",
+    "E-Hentai / ExHentai Direct Connection": "E-Hentai / ExHentai 直连",
+    "Connect directly to EH sites and images, bypassing the configured proxy. WebView login is not covered.": "直接连接 EH 站点和图片，绕过已配置的代理。不适用于内置浏览器登录。",
     "Home": "主页",
     "Favorites": "收藏",
     "Explore": "发现",
@@ -442,6 +445,9 @@
     "Mouse scroll speed": "鼠标滚动速度"
   },
   "zh_TW": {
+    "No images available to use as cover.": "沒有可作為封面的圖片。",
+    "E-Hentai / ExHentai Direct Connection": "E-Hentai / ExHentai 直連",
+    "Connect directly to EH sites and images, bypassing the configured proxy. WebView login is not covered.": "直接連線 EH 網站和圖片，略過已設定的代理。不適用於內建瀏覽器登入。",
     "Home": "首頁",
     "Favorites": "收藏",
     "Explore": "探索",

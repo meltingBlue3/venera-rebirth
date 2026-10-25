@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:dio/io.dart';
+import 'package:venera/foundation/appdata.dart';
 import 'package:venera/network/app_dio.dart';
 import 'package:venera/network/proxy.dart';
 import 'package:venera/utils/ext.dart';
@@ -107,12 +108,15 @@ class FileDownloader {
   void _download(StreamController<DownloadingStatus> resultStream) async {
     try {
       var proxy = await getProxy();
-      _dio.httpClientAdapter = IOHttpClientAdapter(
-        createHttpClient: () {
-          return HttpClient()
-            ..findProxy = (uri) => proxy == null ? "DIRECT" : "PROXY $proxy";
-        },
-      );
+      _dio.httpClientAdapter = appdata.settings['ehDirectConnection'] == true
+          ? RHttpAdapter()
+          : IOHttpClientAdapter(
+              createHttpClient: () {
+                return HttpClient()
+                  ..findProxy = (uri) =>
+                      proxy == null ? "DIRECT" : "PROXY $proxy";
+              },
+            );
 
       // get file size
       await _createTasks();

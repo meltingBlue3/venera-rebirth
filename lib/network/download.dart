@@ -14,6 +14,7 @@ import 'package:venera/network/images.dart';
 import 'package:venera/utils/ext.dart';
 import 'package:venera/utils/file_type.dart';
 import 'package:venera/utils/io.dart';
+import 'package:venera/utils/translations.dart';
 import 'package:zip_flutter/zip_flutter.dart';
 
 import 'file_downloader.dart';
@@ -117,8 +118,7 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
           }
           try {
             await Directory(path!).delete(recursive: true);
-          }
-          catch(e) {
+          } catch (e) {
             Log.error("Download", "Failed to delete directory: $e");
           }
         });
@@ -137,7 +137,9 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
   String? get cover => _cover ?? comic?.cover;
 
   @override
-  String get message => _message;
+  String get message => _isRunning && _images != null && tasks.isNotEmpty
+      ? '$_completedImageCount/$_totalCount'
+      : _message;
 
   @override
   void pause() {
@@ -162,7 +164,18 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
   }
 
   @override
-  double get progress => _totalCount == 0 ? 0 : _downloadedCount / _totalCount;
+  double get progress =>
+      _totalCount == 0 ? 0 : _completedImageCount / _totalCount;
+
+  // Persist the contiguous prefix for resume compatibility, but include later
+  // completed pages in the UI while an earlier request is still retrying.
+  int get _completedImageCount {
+    if (_images == null || _chapter >= _images!.length) return _downloadedCount;
+    return _downloadedCount +
+        tasks.entries
+            .where((entry) => entry.key >= _index && entry.value.isComplete)
+            .length;
+  }
 
   bool _isRunning = false;
 
@@ -209,12 +222,14 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
       }
       Directory saveTo;
       if (comic!.chapters != null) {
-        saveTo = Directory(FilePath.join(
-          path!,
-          LocalManager.getChapterDirectoryName(
-            _images!.keys.elementAt(_chapter),
+        saveTo = Directory(
+          FilePath.join(
+            path!,
+            LocalManager.getChapterDirectoryName(
+              _images!.keys.elementAt(_chapter),
+            ),
           ),
-        ));
+        );
         if (!saveTo.existsSync()) {
           saveTo.createSync(recursive: true);
         }
@@ -294,8 +309,10 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
       notifyListeners();
       var res = await _runWithRetry(() async {
         Uint8List? data;
-        await for (var progress
-            in ImageDownloader.loadThumbnail(comic!.cover, source.key)) {
+        await for (var progress in ImageDownloader.loadThumbnail(
+          comic!.cover,
+          source.key,
+        )) {
           if (progress.imageBytes != null) {
             data = progress.imageBytes;
           }
@@ -309,9 +326,12 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
         return "file://${file.path}";
       });
       if (res.error) {
-        Log.error("Download", res.errorMessage!);
-        _setError("Error: ${res.errorMessage}");
-        return;
+        // A cover is optional. Some EH networks can reach gallery pages and
+        // H@H images while the separate thumbnail host is unreachable.
+        Log.warning(
+          "Download",
+          "Cover unavailable; using a downloaded page as cover. ${res.errorMessage}",
+        );
       } else {
         _cover = res.data;
         notifyListeners();
@@ -399,6 +419,20 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
           _setError("Error: ${task.error}");
           return;
         }
+        if (_cover == null) {
+          try {
+            final image = task.savedFile!;
+            final fileType = detectFileType(await image.readAsBytes());
+            final cover = await image.copy(
+              FilePath.join(path!, 'cover${fileType.ext}'),
+            );
+            _cover = 'file://${cover.path}';
+          } catch (e, s) {
+            Log.error("Download", e.toString(), s);
+            _setError("Error: $e");
+            return;
+          }
+        }
         _index++;
         _downloadedCount++;
         _message = "$_downloadedCount/$_totalCount";
@@ -408,6 +442,10 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
       _chapter++;
     }
 
+    if (_cover == null) {
+      _setError("No images available to use as cover.".tl);
+      return;
+    }
     LocalManager().completeTask(this);
     stopRecorder();
   }
@@ -464,12 +502,13 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
     }
 
     return ImagesDownloadTask(
-      source: ComicSource.find(json["source"])!,
-      comicId: json["comicId"],
-      comic:
-          json["comic"] == null ? null : ComicDetails.fromJson(json["comic"]),
-      chapters: ListOrNull.from(json["chapters"]),
-    )
+        source: ComicSource.find(json["source"])!,
+        comicId: json["comicId"],
+        comic: json["comic"] == null
+            ? null
+            : ComicDetails.fromJson(json["comic"]),
+        chapters: ListOrNull.from(json["chapters"]),
+      )
       ..path = json["path"]
       .._cover = json["cover"]
       .._images = images
@@ -515,8 +554,10 @@ class ImagesDownloadTask extends DownloadTask with _TransferSpeedMixin {
   int get hashCode => Object.hash(comicId, source.key);
 }
 
-Future<Res<T>> _runWithRetry<T>(Future<T> Function() task,
-    {int retry = 3}) async {
+Future<Res<T>> _runWithRetry<T>(
+  Future<T> Function() task, {
+  int retry = 3,
+}) async {
   for (var i = 0; i < retry; i++) {
     try {
       return Res(await task());
@@ -553,6 +594,8 @@ class _ImageDownloadWrapper {
 
   bool isComplete = false;
 
+  File? savedFile;
+
   String? error;
 
   bool isCancelled = false;
@@ -569,7 +612,11 @@ class _ImageDownloadWrapper {
     int lastBytes = 0;
     try {
       await for (var p in ImageDownloader.loadComicImageUnwrapped(
-          image, task.source.key, task.comicId, chapter)) {
+        image,
+        task.source.key,
+        task.comicId,
+        chapter,
+      )) {
         if (isCancelled) {
           return;
         }
@@ -579,6 +626,7 @@ class _ImageDownloadWrapper {
           var fileType = detectFileType(p.imageBytes!);
           var file = saveTo.joinFile("$index${fileType.ext}");
           await file.writeAsBytes(p.imageBytes!);
+          savedFile = file;
           isComplete = true;
           for (var c in completers) {
             c.complete(this);
@@ -757,8 +805,9 @@ class ArchiveDownloadTask extends DownloadTask {
       path = dir.path;
     }
 
-    var archiveFile =
-        File(FilePath.join(App.dataPath, "archive_downloading.zip"));
+    var archiveFile = File(
+      FilePath.join(App.dataPath, "archive_downloading.zip"),
+    );
 
     Log.info("Download", "Downloading $archiveUrl");
 

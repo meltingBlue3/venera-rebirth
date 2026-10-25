@@ -232,7 +232,7 @@ class CookieManagerSql extends Interceptor {
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) {
     cookieJar.saveFromResponseCookieHeader(
-        response.requestOptions.uri, response.headers["set-cookie"] ?? []);
+        response.realUri, response.headers["set-cookie"] ?? []);
     handler.next(response);
   }
 

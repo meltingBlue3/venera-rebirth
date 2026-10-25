@@ -56,6 +56,13 @@ The file name can be anything, but the extension must be a valid image extension
 The page order is determined by the file name. App will sort the files by name and display them in that order.
 
 Cover image is optional. 
+
+For page-by-page network downloads, an unavailable cover no longer blocks the
+comic's pages. The first successfully downloaded page is copied to the comic
+root as its cover; chapter images keep their original chapter directories.
+Page download failures still stop the task, and an empty task with no usable
+cover is reported as an error.
+
 If there is a file named `cover.[ext]` in the directory, it will be considered as the cover image.
 Otherwise, the first image will be considered as the cover image.
 

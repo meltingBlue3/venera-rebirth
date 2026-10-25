@@ -13,6 +13,17 @@ class _NetworkSettingsState extends State<NetworkSettings> {
     return SmoothCustomScrollView(
       slivers: [
         SliverAppbar(title: Text("Network".tl)),
+        _SwitchSetting(
+          title: "E-Hentai / ExHentai Direct Connection".tl,
+          subtitle:
+              "Connect directly to EH sites and images, bypassing the configured proxy. WebView login is not covered."
+                  .tl,
+          settingKey: 'ehDirectConnection',
+          onChanged: () {
+            NetworkCacheManager().clear();
+            JsEngine().resetDio();
+          },
+        ).toSliver(),
         _PopupWindowSetting(
           title: "Proxy".tl,
           builder: () => const _ProxySettingView(),
