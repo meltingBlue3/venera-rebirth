@@ -116,4 +116,14 @@ keyPassword=YOUR_KEY_PASSWORD
 
 Android 目录已忽略 `key.properties`、`*.jks` 和 `*.keystore`。密钥放在其他目录时也应保存在版本控制之外。妥善备份本分支的发布密钥，后续更新需要保持签名身份一致。
 
+配置本地发行签名后，可构建供他人安装的发布版：
+
+```bash
+flutter build apk --release --no-pub
+```
+
+应用显示名称为 `Venera`，常规包名为 `com.github.wgh136.venera`。通用 APK
+包含 ARM64、ARMv7、x86_64，适合分发给不同架构的设备。发行签名需要在后续
+更新中沿用；本分支新建的密钥与上游应用及本地调试包的签名不同，不能直接覆盖安装。
+
 发行前还需完成[本分支的发行配置核对](development.md#fork-与发行配置)。目前验证的是调试构建，尚未验证本分支的正式签名发布。
