@@ -83,6 +83,8 @@ Convert an ArrayBuffer to a hex string.
 
 ## Network
 
+When [PicACG direct connection](picacg_direct_connection.md) is enabled, known PicACG HTTPS API and image hosts use ECH and encrypted DNS, including requests specifying the internal `http_client: dart:io` transport hint. This internal header is consumed by the host and is not sent to the server. Original URLs and signatures are preserved. WebView requests are not covered.
+
 Network is a set of functions that used to send network requests and manage network resources.
 
 When the user enables [E-Hentai / ExHentai direct connection](eh_direct_connection.md), matching EH requests use the app's direct DNS and TLS policy, including requests specifying the internal `http_client: dart:io` header. URLs, cookies and certificate verification names remain the original domain. WebView requests are not covered.

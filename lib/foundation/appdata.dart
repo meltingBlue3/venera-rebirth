@@ -214,6 +214,7 @@ class Settings with ChangeNotifier {
     'enableDnsOverrides': false,
     'ehDirectConnection': false,
     'jmDirectConnection': false,
+    'picacgDirectConnection': false,
     'dnsOverrides': {},
     'enableCustomImageProcessing': false,
     'customImageProcessing': defaultCustomImageProcessing,

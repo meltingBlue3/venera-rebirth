@@ -30,6 +30,7 @@ import 'package:venera/network/app_dio.dart';
 import 'package:venera/network/cookie_jar.dart';
 import 'package:venera/network/eh_direct_connection.dart';
 import 'package:venera/network/jm_direct_connection.dart';
+import 'package:venera/network/picacg_direct_connection.dart';
 import 'package:venera/network/proxy.dart';
 import 'package:venera/utils/init.dart';
 
@@ -253,7 +254,9 @@ class JsEngine with _JSEngineApi, JsUiApi, Init {
           !(appdata.settings['ehDirectConnection'] == true &&
               EhDirectConnection.appliesTo(Uri.parse(req['url']))) &&
           !(appdata.settings['jmDirectConnection'] == true &&
-              JmDirectConnection.instance.appliesTo(Uri.parse(req['url'])))) {
+              JmDirectConnection.instance.appliesTo(Uri.parse(req['url']))) &&
+          !(appdata.settings['picacgDirectConnection'] == true &&
+              PicacgDirectConnection.appliesTo(Uri.parse(req['url'])))) {
         dio = Dio(
           BaseOptions(
             responseType: ResponseType.plain,
@@ -272,6 +275,8 @@ class JsEngine with _JSEngineApi, JsUiApi, Init {
         );
         dio.interceptors.add(LogInterceptor());
       }
+      // http_client is a host transport hint, never an HTTP header.
+      headers.remove('http_client');
       response = await dio!.request(
         req["url"],
         data: req["data"],

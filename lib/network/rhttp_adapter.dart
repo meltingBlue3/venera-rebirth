@@ -9,13 +9,15 @@ import 'package:venera/foundation/appdata.dart';
 import 'cookie_jar.dart';
 import 'eh_direct_connection.dart';
 import 'jm_direct_connection.dart';
+import 'picacg_direct_connection.dart';
 import 'proxy.dart';
 
 class RHttpAdapter implements HttpClientAdapter {
-  RHttpAdapter({this.send = _send, this.cookieJar});
+  RHttpAdapter({this.send = _send, this.cookieJar, this.picacg});
 
   final Future<rhttp.HttpResponse> Function(rhttp.HttpRequest) send;
   final CookieJarSql? cookieJar;
+  final PicacgDirectConnection? picacg;
 
   // Rhttp.send(BaseHttpRequest) rebuilds the request and drops its settings
   // unless passed separately. HttpRequest.send() retains the routing policy.
@@ -33,7 +35,11 @@ class RHttpAdapter implements HttpClientAdapter {
     final jmDirect =
         appdata.settings['jmDirectConnection'] == true &&
         JmDirectConnection.instance.appliesTo(uri);
-    final proxy = direct || jmDirect ? null : await getProxy();
+    final picaDirect =
+        appdata.settings['picacgDirectConnection'] == true &&
+        PicacgDirectConnection.appliesTo(uri);
+    final pica = picacg ?? PicacgDirectConnection.instance;
+    final proxy = direct || jmDirect || picaDirect ? null : await getProxy();
     final overrides = _getOverrides();
     return rhttp.ClientSettings(
       // H@H nodes can reject negotiated HTTP/2 or close its TLS stream early.
@@ -64,13 +70,23 @@ class RHttpAdapter implements HttpClientAdapter {
                   overrides[host.toLowerCase()] ??
                   await JmDirectConnection.instance.resolve(host),
             )
+          : picaDirect
+          ? rhttp.DnsSettings.dynamic(
+              resolver: (host) async =>
+                  overrides[host.toLowerCase()] ?? await pica.resolve(host),
+            )
           : rhttp.DnsSettings.static(overrides: overrides),
       tlsSettings: rhttp.TlsSettings(
-        sni: jmDirect || (!direct && appdata.settings['sni'] != false),
+        sni:
+            picaDirect ||
+            jmDirect ||
+            (!direct && appdata.settings['sni'] != false),
         verifyCertificates:
             direct ||
             jmDirect ||
+            picaDirect ||
             appdata.settings['ignoreBadCertificate'] != true,
+        echConfigList: picaDirect ? await pica.echConfigList() : null,
       ),
     );
   }
@@ -107,7 +123,9 @@ class RHttpAdapter implements HttpClientAdapter {
     if ((appdata.settings['ehDirectConnection'] == true &&
             EhDirectConnection.appliesTo(uri)) ||
         (appdata.settings['jmDirectConnection'] == true &&
-            JmDirectConnection.instance.appliesTo(uri))) {
+            JmDirectConnection.instance.appliesTo(uri)) ||
+        (appdata.settings['picacgDirectConnection'] == true &&
+            PicacgDirectConnection.appliesTo(uri))) {
       final cookies = jar?.loadForRequestCookieHeader(uri);
       if (cookies != null && cookies.isNotEmpty) {
         headers.putIfAbsent('cookie', () => cookies);
@@ -123,7 +141,8 @@ class RHttpAdapter implements HttpClientAdapter {
     // policy, including redirects from unrelated sites into EH and back out.
     final routeRedirects =
         appdata.settings['ehDirectConnection'] == true ||
-        appdata.settings['jmDirectConnection'] == true;
+        appdata.settings['jmDirectConnection'] == true ||
+        appdata.settings['picacgDirectConnection'] == true;
     final token = cancelFuture == null ? null : rhttp.CancelToken();
     var finished = false;
     var returnedStream = false;

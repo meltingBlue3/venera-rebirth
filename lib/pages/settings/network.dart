@@ -39,6 +39,18 @@ class _NetworkSettingsState extends State<NetworkSettings> {
             JsEngine().resetDio();
           },
         ).toSliver(),
+        _SwitchSetting(
+          title: "PicACG Direct Connection".tl,
+          subtitle:
+              "Use ECH and encrypted DNS for PicACG API and images, bypassing the configured proxy. WebView is not covered."
+                  .tl,
+          settingKey: 'picacgDirectConnection',
+          onChanged: () {
+            PicacgDirectConnection.instance.clear();
+            NetworkCacheManager().clear();
+            JsEngine().resetDio();
+          },
+        ).toSliver(),
         _PopupWindowSetting(
           title: "DNS Overrides".tl,
           builder: () => const _DNSOverrides(),

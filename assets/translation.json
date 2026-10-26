@@ -1,5 +1,7 @@
 {
   "zh_CN": {
+    "PicACG Direct Connection": "PicACG 直连",
+    "Use ECH and encrypted DNS for PicACG API and images, bypassing the configured proxy. WebView is not covered.": "使用 ECH 和加密 DNS 连接 PicACG API 与图片，绕过已配置的代理。不适用于内置浏览器。",
     "JMComic Direct Connection": "JMComic 直连",
     "Use encrypted DNS and automatic JM routes, bypassing the configured proxy. WebView is not covered.": "使用加密 DNS 和 JM 自动换线，绕过已配置的代理。不适用于内置浏览器。",
     "No images available to use as cover.": "没有可用作封面的图片。",
@@ -447,6 +449,8 @@
     "Mouse scroll speed": "鼠标滚动速度"
   },
   "zh_TW": {
+    "PicACG Direct Connection": "PicACG 直連",
+    "Use ECH and encrypted DNS for PicACG API and images, bypassing the configured proxy. WebView is not covered.": "使用 ECH 與加密 DNS 連接 PicACG API 與圖片，繞過已設定的代理。不適用於內建瀏覽器。",
     "JMComic Direct Connection": "JMComic 直連",
     "Use encrypted DNS and automatic JM routes, bypassing the configured proxy. WebView is not covered.": "使用加密 DNS 和 JM 自動換線，略過已設定的代理。不適用於內建瀏覽器。",
     "No images available to use as cover.": "沒有可作為封面的圖片。",
