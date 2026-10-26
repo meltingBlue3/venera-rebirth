@@ -1,0 +1,5 @@
+.dart_tool/
+.flutter-plugins-dependencies
+pubspec.lock
+rust/target/
+cargokit/build_tool/.dart_tool/
