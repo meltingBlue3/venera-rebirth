@@ -213,6 +213,7 @@ class Settings with ChangeNotifier {
     'onClickFavorite': 'viewDetail', // viewDetail, read
     'enableDnsOverrides': false,
     'ehDirectConnection': false,
+    'jmDirectConnection': false,
     'dnsOverrides': {},
     'enableCustomImageProcessing': false,
     'customImageProcessing': defaultCustomImageProcessing,

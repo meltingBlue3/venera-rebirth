@@ -8,6 +8,7 @@ import 'package:venera/foundation/appdata.dart';
 
 import 'cookie_jar.dart';
 import 'eh_direct_connection.dart';
+import 'jm_direct_connection.dart';
 import 'proxy.dart';
 
 class RHttpAdapter implements HttpClientAdapter {
@@ -29,7 +30,10 @@ class RHttpAdapter implements HttpClientAdapter {
     final direct =
         appdata.settings['ehDirectConnection'] == true &&
         EhDirectConnection.appliesTo(uri);
-    final proxy = direct ? null : await getProxy();
+    final jmDirect =
+        appdata.settings['jmDirectConnection'] == true &&
+        JmDirectConnection.instance.appliesTo(uri);
+    final proxy = direct || jmDirect ? null : await getProxy();
     final overrides = _getOverrides();
     return rhttp.ClientSettings(
       // H@H nodes can reject negotiated HTTP/2 or close its TLS stream early.
@@ -43,7 +47,8 @@ class RHttpAdapter implements HttpClientAdapter {
       redirectSettings: followRedirects
           ? rhttp.RedirectSettings.limited(maxRedirects)
           : const rhttp.RedirectSettings.none(),
-      timeoutSettings: const rhttp.TimeoutSettings(
+      timeoutSettings: rhttp.TimeoutSettings(
+        timeout: jmDirect ? const Duration(seconds: 12) : null,
         connectTimeout: Duration(seconds: 15),
         keepAliveTimeout: Duration(seconds: 60),
         keepAlivePing: Duration(seconds: 30),
@@ -53,11 +58,19 @@ class RHttpAdapter implements HttpClientAdapter {
           ? rhttp.DnsSettings.dynamic(
               resolver: EhDirectConnection(overrides: overrides).resolve,
             )
+          : jmDirect
+          ? rhttp.DnsSettings.dynamic(
+              resolver: (host) async =>
+                  overrides[host.toLowerCase()] ??
+                  await JmDirectConnection.instance.resolve(host),
+            )
           : rhttp.DnsSettings.static(overrides: overrides),
       tlsSettings: rhttp.TlsSettings(
-        sni: !direct && appdata.settings['sni'] != false,
+        sni: jmDirect || (!direct && appdata.settings['sni'] != false),
         verifyCertificates:
-            direct || appdata.settings['ignoreBadCertificate'] != true,
+            direct ||
+            jmDirect ||
+            appdata.settings['ignoreBadCertificate'] != true,
       ),
     );
   }
@@ -91,8 +104,10 @@ class RHttpAdapter implements HttpClientAdapter {
     };
     headers.putIfAbsent('user-agent', () => 'venera/v${App.version}');
     final jar = cookieJar ?? SingleInstanceCookieJar.instance;
-    if (appdata.settings['ehDirectConnection'] == true &&
-        EhDirectConnection.appliesTo(uri)) {
+    if ((appdata.settings['ehDirectConnection'] == true &&
+            EhDirectConnection.appliesTo(uri)) ||
+        (appdata.settings['jmDirectConnection'] == true &&
+            JmDirectConnection.instance.appliesTo(uri))) {
       final cookies = jar?.loadForRequestCookieHeader(uri);
       if (cookies != null && cookies.isNotEmpty) {
         headers.putIfAbsent('cookie', () => cookies);
@@ -106,7 +121,9 @@ class RHttpAdapter implements HttpClientAdapter {
     // A client's TLS/proxy settings apply to every native redirect. Follow
     // redirects here while the feature is enabled so each target gets its own
     // policy, including redirects from unrelated sites into EH and back out.
-    final routeRedirects = appdata.settings['ehDirectConnection'] == true;
+    final routeRedirects =
+        appdata.settings['ehDirectConnection'] == true ||
+        appdata.settings['jmDirectConnection'] == true;
     final token = cancelFuture == null ? null : rhttp.CancelToken();
     var finished = false;
     var returnedStream = false;

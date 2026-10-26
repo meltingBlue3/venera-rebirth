@@ -1,5 +1,7 @@
 {
   "zh_CN": {
+    "JMComic Direct Connection": "JMComic 直连",
+    "Use encrypted DNS and automatic JM routes, bypassing the configured proxy. WebView is not covered.": "使用加密 DNS 和 JM 自动换线，绕过已配置的代理。不适用于内置浏览器。",
     "No images available to use as cover.": "没有可用作封面的图片。",
     "E-Hentai / ExHentai Direct Connection": "E-Hentai / ExHentai 直连",
     "Connect directly to EH sites and images, bypassing the configured proxy. WebView login is not covered.": "直接连接 EH 站点和图片，绕过已配置的代理。不适用于内置浏览器登录。",
@@ -445,6 +447,8 @@
     "Mouse scroll speed": "鼠标滚动速度"
   },
   "zh_TW": {
+    "JMComic Direct Connection": "JMComic 直連",
+    "Use encrypted DNS and automatic JM routes, bypassing the configured proxy. WebView is not covered.": "使用加密 DNS 和 JM 自動換線，略過已設定的代理。不適用於內建瀏覽器。",
     "No images available to use as cover.": "沒有可作為封面的圖片。",
     "E-Hentai / ExHentai Direct Connection": "E-Hentai / ExHentai 直連",
     "Connect directly to EH sites and images, bypassing the configured proxy. WebView login is not covered.": "直接連線 EH 網站和圖片，略過已設定的代理。不適用於內建瀏覽器登入。",

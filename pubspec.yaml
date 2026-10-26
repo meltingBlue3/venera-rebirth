@@ -100,6 +100,7 @@ flutter:
   assets:
     - assets/translation.json
     - assets/init.js
+    - assets/jm_direct_connection.js
     - assets/app_icon.png
     - assets/tags.json
     - assets/tags_tw.json

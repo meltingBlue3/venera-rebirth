@@ -87,6 +87,8 @@ Network is a set of functions that used to send network requests and manage netw
 
 When the user enables [E-Hentai / ExHentai direct connection](eh_direct_connection.md), matching EH requests use the app's direct DNS and TLS policy, including requests specifying the internal `http_client: dart:io` header. URLs, cookies and certificate verification names remain the original domain. WebView requests are not covered.
 
+When [JMComic direct connection](jm_direct_connection.md) is enabled, registered JM HTTPS hosts use direct encrypted DNS resolution, retain SNI and always verify certificates, including requests specifying `http_client: dart:io`. The built-in compatibility layer for the upstream `jm` source discovers and registers API/image hosts and retries known read-only requests. POST requests keep the original behavior. The internal `jmNetwork` host bridge and `JmNetwork` object are application implementation details, not new public source APIs; other sources should continue to use the interfaces below.
+
 ### `Network.fetchBytes(method: string, url: string, headers: object, data: ArrayBuffer): Promise<{status: number, headers: object, body: ArrayBuffer}>`
 
 Send a network request and return the response as an ArrayBuffer.

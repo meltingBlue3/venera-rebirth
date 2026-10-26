@@ -7,6 +7,7 @@ Venera is a comic reader that can read comics from various sources.
 All comic sources are written in javascript. 
 
 For E-Hentai / ExHentai sources, the app provides an optional [direct connection mode](eh_direct_connection.md) in network settings. It applies to source requests and images without changing source identifiers or API signatures.
+For the upstream JM source (`key=jm`), [JMComic direct connection](jm_direct_connection.md) adds encrypted DNS, cached domain discovery and separate API/image failover. The application installs its compatibility layer at runtime; the installed source file and identifiers remain unchanged.
 Venera uses [flutter_qjs](https://github.com/wgh136/flutter_qjs) as js engine which is forked from [ekibun](https://github.com/ekibun/flutter_qjs).
 
 This document will describe how to write a comic source for Venera.

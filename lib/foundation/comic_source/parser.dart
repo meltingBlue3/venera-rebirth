@@ -169,6 +169,10 @@ class ComicSourceParser {
 
     await source.loadData();
 
+    if (key == 'jm') {
+      JsEngine().runCode("JmNetwork.install(ComicSource.sources.jm)");
+    }
+
     if (_checkExists("init")) {
       Future.delayed(const Duration(milliseconds: 50), () {
         JsEngine().runCode("ComicSource.sources.$_key.init()");
