@@ -80,3 +80,14 @@ Android 调试版使用本机默认调试密钥，无需 `android/key.properties
 
 中文漫画标签翻译数据来自 [EhTagTranslation / Database](https://github.com/EhTagTranslation/Database)。
 
+JM、哔咔和 EH / ExHentai 直连功能的实现与调研参考了以下开源项目，感谢各项目作者与贡献者：
+
+- [hect0x7/JMComic-Crawler-Python](https://github.com/hect0x7/JMComic-Crawler-Python)：JM 动态域名发现、配置入口、候选 API 与图片域名。
+- [tonquer/JMComic-qt](https://github.com/tonquer/JMComic-qt)：JM 的 DoH、解析覆盖与 ECH 方案研究；本项目 JM 当前采用加密 DNS 和入口换线，尚未实现 ECH 或 HTTP/3 专用选路。
+- [tonquer/picacg-qt](https://github.com/tonquer/picacg-qt)：哔咔的 ECH、DoH 与连接 IP 方案，以及 API / 图片主机和备用 IP 配置参考。
+- [UjuiUjuMandan/EhViewer](https://github.com/UjuiUjuMandan/EhViewer)：EH / ExHentai 的内置 IP 池、Cloudflare 别名解析和省略 SNI 的直连思路，主要参考其 `anti-dpi` 补丁。
+
+调研中还参考了 [wgh136/PicaComic](https://github.com/wgh136/PicaComic) 的历史 hosts 与分流实现、[ComicSparks/pikapika](https://github.com/ComicSparks/pikapika) 的 API / 图片独立分流设计，以及 [raoxwup/haka_comic](https://github.com/raoxwup/haka_comic) 对原站与第三方中转入口的区分，感谢这些项目提供的对照与启发。
+
+具体采用范围、固定提交来源与实现差异见 [JM 直连说明](doc/jm_direct_connection.md)、[哔咔直连说明](doc/picacg_direct_connection.md)和 [EH 直连说明](doc/eh_direct_connection.md)。
+
